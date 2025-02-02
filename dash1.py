@@ -30,34 +30,30 @@ st.markdown("**Objective:** Explore key factors influencing obesity levels (NObe
 # Updated Target Distribution
 # ============================================
 def plot_target_distribution():
-    """Sorted bar chart for obesity level distribution with a single color and annotations."""
+    """Sorted bar chart for obesity level distribution with a single color and in-bar annotations."""
+    
     category_counts = df['NObeyesdad'].value_counts().sort_index()
     
-    fig = px.bar(
-        category_counts, 
-        x=category_counts.index.astype(str),  # Ensure x-axis values are treated as categories
-        y=category_counts.values, 
-        title="Distribution of Obesity Levels",
-        labels={'x': 'Obesity Category', 'y': 'Number of Cases'},
-        color_discrete_sequence=['#0086eb']  # Single color
-    )
+    fig = go.Figure()
     
-    # Add annotations
-    for i, (label, count) in enumerate(zip(category_counts.index, category_counts.values)):
-        fig.add_annotation(
-            x=str(label),  # Ensure x is a string
-            y=count + max(category_counts.values) * 0.02,  # Small offset above bar
-            text=str(count),
-            showarrow=False,
-            font=dict(size=12, color='black')
-        )
+    fig.add_trace(go.Bar(
+        x=category_counts.index.astype(str),  # Ensure categorical x-axis
+        y=category_counts.values, 
+        text=category_counts.values,  # Display count as text
+        textposition='outside',  # Place text above the bars
+        marker_color='#0086eb',  # Single color for all bars
+    ))
     
     fig.update_layout(
+        title="Distribution of Obesity Levels",
+        xaxis_title="Obesity Category",
+        yaxis_title="Number of Cases",
         title_x=0.5,
-        showlegend=False  # Hide legend since it's a single color
+        showlegend=False  # No legend needed for a single-color plot
     )
     
     return fig
+
 
 
 # ============================================

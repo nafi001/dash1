@@ -293,9 +293,7 @@ with col1:
 with col2:
     st.plotly_chart(create_grouped_bar(), use_container_width=True)
 
-col1 = st.columns(1)
-with col1:
-    st.plotly_chart(create_water_box(), use_container_width=True)    
+st.plotly_chart((create_water_box), use_container_width=True)  
     
         
 # Row 4: Demographic Relationships

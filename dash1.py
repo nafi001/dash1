@@ -37,7 +37,7 @@ def plot_target_distribution():
                  y=category_counts.values, 
                  title="Distribution of Obesity Levels",
                  labels={'x': 'Obesity Category', 'y': 'Number of Cases'},
-                 color_discrete_sequence=['#bee9e8'])  # Single color
+                 color_discrete_sequence=['#0086eb'])  # Single color
     
     # Add annotations
     for i, count in enumerate(category_counts.values):
@@ -78,7 +78,7 @@ def plot_faf_stacked():
     faf_distribution = df.groupby(['NObeyesdad', 'FAF_category']).size().reset_index(name='count')
     
     # Define discrete color scale
-    color_scale = px.colors.qualitative.D3  # Or use other qualitative color scales
+    color_scale = px.colors.qualitative.Plotly  # Or use other qualitative color scales
     
     # Create stacked bar plot
     fig = px.bar(
@@ -107,7 +107,7 @@ def plot_height_weight_relationship():
                     color='NObeyesdad',
                     title='Height vs Weight Colored by Obesity Level',
                     hover_data=['Height', 'Gender'],
-                    color_discrete_sequence=px.colors.qualitative.D3)
+                    color_discrete_sequence=px.colors.qualitative.Plotly)
     fig.update_layout(title_x=0.5)
     return fig
 
@@ -124,7 +124,7 @@ def create_sunburst_chart():
     """Sunburst chart of gender > family history > obesity"""
     fig = px.sunburst(df, path=['Gender', 'family_history_with_overweight', 'NObeyesdad'],
                      title='Obesity Hierarchy: Gender → Family History → Obesity Level',
-                     color_discrete_sequence=px.colors.qualitative.D3)
+                     color_discrete_sequence=px.colors.qualitative.Plotly)
     fig.update_layout(title_x=0.5)
     return fig
 

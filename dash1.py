@@ -157,14 +157,16 @@ def create_grouped_bar():
     )
     return fig
 
- fig = px.box(df, x='NObeyesdad', y='CH2O',
+def create_water_box():
+    """Water consumption box plot"""
+    fig = px.box(df, x='NObeyesdad', y='CH2O',
                 color='NObeyesdad',
                 title='Water Consumption Patterns',
                 labels={'CH2O': 'Daily Water Consumption'},
                 color_discrete_sequence=px.colors.qualitative.Dark2)
     fig.update_layout(title_x=0.5)
     return fig
-CH2O is conyinius. make it 
+
 
 # ============================================
 # Dashboard Layout

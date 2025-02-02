@@ -58,16 +58,41 @@ def plot_target_distribution():
 # ============================================
 # New Stacked Bar Chart (FAF vs Obesity)
 # ============================================
-def plot_faf_stacked():
-    """Stacked bar chart of obesity levels stacked by physical activity (FAF)."""
-    faf_distribution = df.groupby(['NObeyesdad', 'FAF']).size().reset_index(name='count')
-    fig = px.bar(faf_distribution, 
-                 x='NObeyesdad', y='count', color='FAF', 
-                 title='Physical Activity (FAF) Across Obesity Levels', 
-                 labels={'count': 'Number of Cases', 'FAF': 'Physical Activity Frequency'},
-                 barmode='stack')
+def plot_faf_stacked(df):
+    """Stacked bar chart of obesity levels stacked by physical activity (FAF) with categorized labels."""
+    
+    # Define categorical mapping for FAF
+    faf_mapping = {
+        0: 'I do not have',
+        1: '1 or 2 days',
+        2: '2 or 4 days',
+        3: '4 or 5 days'
+    }
+    
+    # Map FAF to categorical labels
+    df['FAF_category'] = df['FAF'].map(faf_mapping)
+    
+    # Group data
+    faf_distribution = df.groupby(['NObeyesdad', 'FAF_category']).size().reset_index(name='count')
+    
+    # Define discrete color scale
+    color_scale = px.colors.qualitative.Set1  # Or use other qualitative color scales
+    
+    # Create stacked bar plot
+    fig = px.bar(
+        faf_distribution, 
+        x='NObeyesdad', 
+        y='count', 
+        color='FAF_category', 
+        title='Physical Activity (FAF) Across Obesity Levels', 
+        labels={'count': 'Number of Cases', 'FAF_category': 'Physical Activity Frequency'},
+        barmode='stack',
+        color_discrete_sequence=color_scale
+    )
+    
     fig.update_layout(title_x=0.5)
     return fig
+
 
 
 
@@ -132,25 +157,14 @@ def create_grouped_bar():
     )
     return fig
 
-def create_water_box():
-    """Box plot of water consumption categorized into three groups."""
-    # Categorize CH2O into three groups
-    df['Water Consumption'] = pd.cut(df['CH2O'], 
-                                     bins=[0, 1, 2, float('inf')], 
-                                     labels=['Less than a liter', 'Between 1 and 2 L', 'More than 2 L'])
-    
-    fig = px.box(df, x='NObeyesdad', y='CH2O', 
-                 color='Water Consumption',
-                 title='Water Consumption Patterns',
-                 labels={'CH2O': 'Daily Water Consumption (L)'},
-                 color_discrete_sequence=px.colors.qualitative.Dark2)
-    
-    fig.update_layout(
-        title_x=0.5,
-        xaxis_title='Obesity Level',
-        yaxis_title='Daily Water Consumption (L)'
-    )
+ fig = px.box(df, x='NObeyesdad', y='CH2O',
+                color='NObeyesdad',
+                title='Water Consumption Patterns',
+                labels={'CH2O': 'Daily Water Consumption'},
+                color_discrete_sequence=px.colors.qualitative.Dark2)
+    fig.update_layout(title_x=0.5)
     return fig
+CH2O is conyinius. make it 
 
 # ============================================
 # Dashboard Layout

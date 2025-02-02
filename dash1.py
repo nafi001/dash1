@@ -116,7 +116,8 @@ def create_funnel_chart():
     """Funnel chart of obesity divided by gender"""
     funnel_df = df.groupby(['NObeyesdad', 'Gender']).size().reset_index(name='count')
     fig = px.funnel(funnel_df, x='count', y='NObeyesdad', color='Gender',
-                   title='Obesity Distribution by Gender')
+                   title='Obesity Distribution by Gender',
+                    color_discrete_sequence=px.colors.qualitative.Plotly)
     fig.update_layout(title_x=0.5)
     return fig
 
@@ -143,13 +144,13 @@ def create_grouped_bar():
         x=smoke_alc_df['NObeyesdad'],
         y=smoke_alc_df['SMOKE'],
         name='Smokers',
-        marker_color='#FFA15A'
+        marker_color='#00f59b'
     ))
     fig.add_trace(go.Bar(
         x=smoke_alc_df['NObeyesdad'],
         y=smoke_alc_df['CALC'],
         name='Frequent Alcohol Consumers',
-        marker_color='#00CC96'
+        marker_color='#7014f2'
     ))
     fig.update_layout(
         title='Impact of Smoking & Alcohol Consumption',

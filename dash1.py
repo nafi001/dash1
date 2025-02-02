@@ -318,11 +318,11 @@ for fig in plot_numerical_features():
     st.plotly_chart(fig, use_container_width=True)
 
 st.header("📊 Categorical Features vs Obesity Level")
-for fig in plot_categorical_features_target():
+for fig in plot_categorical_features_target(df):
     st.plotly_chart(fig, use_container_width=True)
 
 st.header("📊 Numerical Features vs Obesity Level")
-for fig in plot_numerical_features_target():
+for fig in plot_numerical_features_target(df):
     st.plotly_chart(fig, use_container_width=True)
 
 

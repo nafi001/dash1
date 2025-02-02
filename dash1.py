@@ -125,7 +125,7 @@ def create_sunburst_chart():
     """Sunburst chart of gender > family history > obesity"""
     fig = px.sunburst(df, path=['Gender', 'family_history_with_overweight', 'NObeyesdad'],
                      title='Obesity Hierarchy: Gender → Family History → Obesity Level',
-                     color_discrete_sequence=px.colors.qualitative.Plotly)
+                     color_discrete_sequence=px.colors.qualitative.D3)
     fig.update_layout(title_x=0.5)
     return fig
 

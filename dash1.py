@@ -30,16 +30,29 @@ st.markdown("**Objective:** Explore key factors influencing obesity levels (NObe
 # Updated Target Distribution
 # ============================================
 def plot_target_distribution():
-    """Sorted bar chart for obesity level distribution with distinct colors."""
+    """Sorted bar chart for obesity level distribution with a single color and annotations."""
     category_counts = df['NObeyesdad'].value_counts().sort_index()
     fig = px.bar(category_counts, 
                  x=category_counts.index, 
                  y=category_counts.values, 
                  title="Distribution of Obesity Levels",
                  labels={'x': 'Obesity Category', 'y': 'Number of Cases'},
-                 color=category_counts.index,
-                 color_discrete_sequence=px.colors.qualitative.Set2)
-    fig.update_layout(title_x=0.5)
+                 color_discrete_sequence=['#1f77b4'])  # Single color
+    
+    # Add annotations
+    for i, count in enumerate(category_counts.values):
+        fig.add_annotation(
+            x=category_counts.index[i],
+            y=count + 10,  # Offset for better visibility
+            text=str(count),
+            showarrow=False,
+            font=dict(size=12, color='black')
+        )
+    
+    fig.update_layout(
+        title_x=0.5,
+        showlegend=False  # Hide legend since it's a single color
+    )
     return fig
 
 # ============================================
@@ -56,127 +69,15 @@ def plot_faf_stacked():
     fig.update_layout(title_x=0.5)
     return fig
 
-# ============================================
-# Convert Categorical & Numerical Feature Plots to Plotly
-# ============================================
-def plot_categorical_features():
-    """Plot categorical feature distributions."""
-    categorical_features = df.select_dtypes(exclude="number").columns
-    figs = []
-    for feature in categorical_features:
-        # Correcting how the value counts are handled
-        value_counts = df[feature].value_counts().reset_index()
-        value_counts.columns = [feature, 'count']  # Rename columns
-        fig = px.bar(value_counts, 
-                     x=feature, y='count', 
-                     title=f'{feature} Distribution',
-                     labels={feature: 'Category', 'count': 'Count'},
-                     color=feature)
-        fig.update_layout(title_x=0.5)
-        figs.append(fig)
-    return figs
 
 
-def plot_numerical_features():
-    """Plot numerical feature distributions (histogram + boxplot)."""
-    numerical_features = df.select_dtypes(include="number").columns
-    figs = []
-    for feature in numerical_features:
-        fig = make_subplots(rows=1, cols=2, subplot_titles=(f'{feature} Histogram', f'{feature} Boxplot'))
-        fig.add_trace(go.Histogram(x=df[feature], name='Histogram', marker_color='blue'), row=1, col=1)
-        fig.add_trace(go.Box(y=df[feature], name='Boxplot', marker_color='red'), row=1, col=2)
-        fig.update_layout(title_text=f'{feature} Distribution', title_x=0.5)
-        figs.append(fig)
-    return figs
 
-import plotly.express as px
 
-def plot_categorical_features_target(df, target_column='NObeyesdad', num_cols=2):
-    """Plot categorical features vs target using stacked bar charts in a grid layout."""
-    categorical_features = df.select_dtypes(exclude="number").columns.drop(target_column, errors='ignore')
-    num_rows = len(categorical_features) // num_cols + (len(categorical_features) % num_cols > 0)
-    
-    fig = make_subplots(rows=num_rows, cols=num_cols,
-                        subplot_titles=[f"{feat} vs {target_column}" for feat in categorical_features],
-                        shared_yaxes=True)
-    
-    for i, feature in enumerate(categorical_features):
-        row, col = divmod(i, num_cols)
-        grouped = df.groupby([target_column, feature]).size().reset_index(name='count')
-        pivot_df = grouped.pivot(index=target_column, columns=feature, values='count').fillna(0)
-        
-        for j, category in enumerate(pivot_df.columns):
-            fig.add_trace(
-                go.Bar(
-                    x=pivot_df.index,
-                    y=pivot_df[category],
-                    name=str(category),
-                    marker_color=px.colors.qualitative.Pastel[j % len(px.colors.qualitative.Pastel)],
-                    showlegend=(i == 0)  # Show legend only for first subplot
-                ),
-                row=row + 1,
-                col=col + 1
-            )
-        
-        fig.update_xaxes(title_text=target_column, row=row + 1, col=col + 1)
-        fig.update_yaxes(title_text="Count", row=row + 1, col=col + 1)
-    
-    fig.update_layout(
-        height=250 * num_rows,
-        barmode='stack',
-        title_text=f"Categorical Features vs {target_column}",
-        margin=dict(t=100),
-        legend_title_text="Categories"
-    )
-    return fig
-
-# ============================================
-# Numerical Features vs Target
-# ============================================
-def plot_numerical_features_target():
-    """Plot numerical features vs target using interactive KDE plots."""
-    numerical_features = df.select_dtypes(include="number").columns.drop('NObeyesdad', errors='ignore')
-    fig = make_subplots(rows=1, cols=len(numerical_features),
-                        subplot_titles=[f"{feat} Density" for feat in numerical_features],
-                        shared_yaxes=True)
-    
-    for i, feature in enumerate(numerical_features):
-        for j, target in enumerate(df['NObeyesdad'].unique()):
-            data = df[df['NObeyesdad'] == target][feature].dropna()
-            if len(data) > 1:
-                kde = gaussian_kde(data)
-                x = np.linspace(data.min(), data.max(), 500)
-                y = kde(x)
-                
-                fig.add_trace(
-                    go.Scatter(
-                        x=x,
-                        y=y,
-                        mode='lines',
-                        name=target,
-                        line=dict(color=px.colors.qualitative.Pastel[j % len(px.colors.qualitative.Pastel)], width=2),
-                        showlegend=(i == 0)  # Show legend only for first subplot
-                    ),
-                    row=1,
-                    col=i + 1
-                )
-        
-        fig.update_xaxes(title_text=feature, row=1, col=i + 1)
-        fig.update_yaxes(title_text="Density", row=1, col=i + 1)
-    
-    fig.update_layout(
-        height=500,
-        title_text="Numerical Features Density by Obesity Level",
-        margin=dict(t=100),
-        legend_title_text="Obesity Levels"
-    )
-    return fig
-
-def plot_age_weight_relationship():
-    """Relationship between Age, Weight, and Obesity Level"""
-    fig = px.scatter(df, x='Age', y='Weight', 
+def plot_height_weight_relationship():
+    """Relationship between Height, Weight, and Obesity Level"""
+    fig = px.scatter(df, x='Height', y='Weight', 
                     color='NObeyesdad',
-                    title='Age vs Weight Colored by Obesity Level',
+                    title='Height vs Weight Colored by Obesity Level',
                     hover_data=['Height', 'Gender'],
                     color_discrete_sequence=px.colors.qualitative.Pastel)
     fig.update_layout(title_x=0.5)
@@ -232,13 +133,23 @@ def create_grouped_bar():
     return fig
 
 def create_water_box():
-    """Water consumption box plot"""
-    fig = px.box(df, x='NObeyesdad', y='CH2O',
-                color='NObeyesdad',
-                title='Water Consumption Patterns',
-                labels={'CH2O': 'Daily Water Consumption'},
-                color_discrete_sequence=px.colors.qualitative.Dark2)
-    fig.update_layout(title_x=0.5)
+    """Box plot of water consumption categorized into three groups."""
+    # Categorize CH2O into three groups
+    df['Water Consumption'] = pd.cut(df['CH2O'], 
+                                     bins=[0, 1, 2, float('inf')], 
+                                     labels=['Less than a liter', 'Between 1 and 2 L', 'More than 2 L'])
+    
+    fig = px.box(df, x='NObeyesdad', y='CH2O', 
+                 color='Water Consumption',
+                 title='Water Consumption Patterns',
+                 labels={'CH2O': 'Daily Water Consumption (L)'},
+                 color_discrete_sequence=px.colors.qualitative.Dark2)
+    
+    fig.update_layout(
+        title_x=0.5,
+        xaxis_title='Obesity Level',
+        yaxis_title='Daily Water Consumption (L)'
+    )
     return fig
 
 # ============================================
@@ -279,24 +190,7 @@ with col2:
 
 # Row 5: Age-Weight Relationship
 st.header("⚖️ Age-Weight Relationship")
-st.plotly_chart(plot_age_weight_relationship(), use_container_width=True)
+st.plotly_chart(plot_height_weight_relationship(), use_container_width=True)
 
-# ============================================
-# Categorical & Numerical Feature Plots
-# ============================================
-st.header("📊 Categorical Feature Analysis")
-for fig in plot_categorical_features():
-    st.plotly_chart(fig, use_container_width=True)
 
-st.header("📊 Numerical Feature Analysis")
-for fig in plot_numerical_features():
-    st.plotly_chart(fig, use_container_width=True)
-
-# Row 4: Categorical Features vs Target
-st.header("📊 Categorical Features vs Obesity Level")
-st.plotly_chart(plot_categorical_features_target(), use_container_width=True)
-
-# Row 5: Numerical Features vs Target
-st.header("📈 Numerical Features vs Obesity Level")
-st.plotly_chart(plot_numerical_features_target(), use_container_width=True)
 

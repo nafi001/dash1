@@ -91,14 +91,19 @@ def plot_numerical_features():
 
 import plotly.express as px
 
+
 def plot_categorical_features_target():
     categorical_features = df.select_dtypes(exclude="number").columns
     figs = []
     
     for feature in categorical_features:
-        # Group by feature and target variable, then reset index without duplicate columns
+        # Group by feature and target variable, without the conflict of duplicated columns
         grouped = df.groupby([feature, 'NObeyesdad']).size().reset_index(name='count')
         
+        # Drop the 'NObeyesdad' column if it's duplicated in the grouped DataFrame
+        if 'NObeyesdad' in grouped.columns:
+            grouped = grouped.drop(columns=['NObeyesdad'], axis=1)
+
         # Create a bar plot using plotly
         fig = px.bar(grouped, x='NObeyesdad', y='count', color=feature,
                      title=f'{feature} vs Obesity Level', barmode='stack')

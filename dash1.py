@@ -92,38 +92,110 @@ def plot_numerical_features():
 import plotly.express as px
 
 
-def plot_categorical_features_target():
-    categorical_features = df.select_dtypes(exclude="number").columns
-    figs = []
+def plot_categorical_features_target(df, target_column='NObeyesdad', num_cols=3, color_palette=None):
+    """Plot categorical features vs target using interactive stacked bar charts"""
+    # Exclude target column from features
+    categorical_features = df.select_dtypes(exclude="number").columns.drop(target_column, errors='ignore')
     
-    for feature in categorical_features:
-        # Group by feature and target variable, without the conflict of duplicated columns
-        grouped = df.groupby([feature, 'NObeyesdad']).size().reset_index(name='count')
-        
-        # Drop the 'NObeyesdad' column if it's duplicated in the grouped DataFrame
-        if 'NObeyesdad' in grouped.columns:
-            grouped = grouped.drop(columns=['NObeyesdad'], axis=1)
-
-        # Create a bar plot using plotly
-        fig = px.bar(grouped, x='NObeyesdad', y='count', color=feature,
-                     title=f'{feature} vs Obesity Level', barmode='stack')
-        
-        figs.append(fig)
+    # Calculate grid dimensions
+    num_rows = (len(categorical_features) + num_cols - 1) // num_cols
+    fig = make_subplots(rows=num_rows, cols=num_cols,
+                       subplot_titles=categorical_features,
+                       vertical_spacing=0.15,
+                       horizontal_spacing=0.05)
     
-    return figs
+    # Generate color palette
+    color_palette = color_palette or px.colors.qualitative.Pastel
+    
+    for idx, feature in enumerate(categorical_features):
+        row = (idx // num_cols) + 1
+        col = (idx % num_cols) + 1
+        
+        # Create aggregated data
+        grouped = df.groupby([target_column, feature]).size().reset_index(name='count')
+        pivot_df = grouped.pivot(index=target_column, columns=feature, values='count').fillna(0)
+        
+        # Add traces for each category
+        for i, category in enumerate(pivot_df.columns):
+            fig.add_trace(
+                go.Bar(
+                    x=pivot_df.index,
+                    y=pivot_df[category],
+                    name=str(category),
+                    marker_color=color_palette[i % len(color_palette)],
+                    showlegend=(idx == 0)  # Show legend only for first subplot
+                ),
+                row=row,
+                col=col
+            )
+        
+        # Update subplot axis labels
+        fig.update_xaxes(title_text=target_column, row=row, col=col)
+        fig.update_yaxes(title_text="Count", row=row, col=col)
+    
+    # Update overall layout
+    fig.update_layout(
+        height=400 * num_rows,
+        barmode='stack',
+        title_text="Categorical Features Distribution by Obesity Level",
+        margin=dict(t=100),
+        legend_title_text="Categories"
+    )
+    return fig
 
-
-def plot_numerical_features_target():
-    """Density plots of numerical features by obesity level."""
-    numerical_features = df.select_dtypes(include="number").columns
-    figs = []
-    for feature in numerical_features:
-        fig = px.violin(df, y=feature, x='NObeyesdad', color='NObeyesdad',
-                        title=f'{feature} Distribution by Obesity Level',
-                        box=True, points="all")
-        fig.update_layout(title_x=0.5)
-        figs.append(fig)
-    return figs
+def plot_numerical_features_target(df, target_column='NObeyesdad', num_cols=2, color_palette=None):
+    """Plot numerical features vs target using interactive KDE plots"""
+    numerical_features = df.select_dtypes(include="number").columns.drop(target_column, errors='ignore')
+    
+    # Calculate grid dimensions
+    num_rows = (len(numerical_features) + num_cols - 1) // num_cols
+    fig = make_subplots(rows=num_rows, cols=num_cols,
+                       subplot_titles=numerical_features,
+                       vertical_spacing=0.15,
+                       horizontal_spacing=0.08)
+    
+    # Generate color palette
+    color_palette = color_palette or px.colors.qualitative.Pastel
+    targets = df[target_column].unique()
+    colors = {t: color_palette[i % len(color_palette)] for i, t in enumerate(targets)}
+    
+    for idx, feature in enumerate(numerical_features):
+        row = (idx // num_cols) + 1
+        col = (idx % num_cols) + 1
+        
+        # Create KDE plots for each target category
+        for target in targets:
+            data = df[df[target_column] == target][feature].dropna()
+            if len(data) > 1:
+                kde = gaussian_kde(data)
+                x = np.linspace(data.min(), data.max(), 500)
+                y = kde(x)
+                
+                fig.add_trace(
+                    go.Scatter(
+                        x=x,
+                        y=y,
+                        mode='lines',
+                        name=target,
+                        line=dict(color=colors[target], width=2),
+                        showlegend=(idx == 0)  # Show legend only for first subplot
+                    ),
+                    row=row,
+                    col=col
+                )
+        
+        # Update subplot axis labels
+        fig.update_xaxes(title_text=feature, row=row, col=col)
+        fig.update_yaxes(title_text="Density", row=row, col=col)
+    
+    # Update overall layout
+    fig.update_layout(
+        height=400 * num_rows,
+        title_text="Numerical Features Density by Obesity Level",
+        margin=dict(t=100),
+        legend_title_text="Obesity Levels"
+    )
+    return fig
 
 def plot_age_weight_relationship():
     """Relationship between Age, Weight, and Obesity Level"""
@@ -221,7 +293,8 @@ with col1:
 with col2:
     st.plotly_chart(create_grouped_bar(), use_container_width=True)
 
-with col3:
+col1 = st.columns(1)
+with col1:
     st.plotly_chart(create_water_box(), use_container_width=True)    
     
         

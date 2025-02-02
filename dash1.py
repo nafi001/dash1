@@ -32,18 +32,21 @@ st.markdown("**Objective:** Explore key factors influencing obesity levels (NObe
 def plot_target_distribution():
     """Sorted bar chart for obesity level distribution with a single color and annotations."""
     category_counts = df['NObeyesdad'].value_counts().sort_index()
-    fig = px.bar(category_counts, 
-                 x=category_counts.index, 
-                 y=category_counts.values, 
-                 title="Distribution of Obesity Levels",
-                 labels={'x': 'Obesity Category', 'y': 'Number of Cases'},
-                 color_discrete_sequence=['#0086eb'])  # Single color
+    
+    fig = px.bar(
+        category_counts, 
+        x=category_counts.index.astype(str),  # Ensure x-axis values are treated as categories
+        y=category_counts.values, 
+        title="Distribution of Obesity Levels",
+        labels={'x': 'Obesity Category', 'y': 'Number of Cases'},
+        color_discrete_sequence=['#0086eb']  # Single color
+    )
     
     # Add annotations
-    for i, count in enumerate(category_counts.values):
+    for i, (label, count) in enumerate(zip(category_counts.index, category_counts.values)):
         fig.add_annotation(
-            x=category_counts.index[i],
-            y=count + 10,  # Offset for better visibility
+            x=str(label),  # Ensure x is a string
+            y=count + max(category_counts.values) * 0.02,  # Small offset above bar
             text=str(count),
             showarrow=False,
             font=dict(size=12, color='black')
@@ -53,7 +56,9 @@ def plot_target_distribution():
         title_x=0.5,
         showlegend=False  # Hide legend since it's a single color
     )
+    
     return fig
+
 
 # ============================================
 # New Stacked Bar Chart (FAF vs Obesity)

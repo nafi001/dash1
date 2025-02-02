@@ -89,18 +89,24 @@ def plot_numerical_features():
         figs.append(fig)
     return figs
 
+import plotly.express as px
+
 def plot_categorical_features_target():
-    """Stacked bar charts for categorical features vs obesity level."""
     categorical_features = df.select_dtypes(exclude="number").columns
     figs = []
+    
     for feature in categorical_features:
+        # Group by feature and target variable, then reset index without duplicate columns
         grouped = df.groupby([feature, 'NObeyesdad']).size().reset_index(name='count')
-        fig = px.bar(grouped, x='NObeyesdad', y='count', color=feature, 
-                     title=f'{feature} vs Obesity Level',
-                     barmode='stack')
-        fig.update_layout(title_x=0.5)
+        
+        # Create a bar plot using plotly
+        fig = px.bar(grouped, x='NObeyesdad', y='count', color=feature,
+                     title=f'{feature} vs Obesity Level', barmode='stack')
+        
         figs.append(fig)
+    
     return figs
+
 
 def plot_numerical_features_target():
     """Density plots of numerical features by obesity level."""

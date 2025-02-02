@@ -199,7 +199,7 @@ st.plotly_chart(plot_target_distribution(), use_container_width=True)
 
 # Row 3: Behavioral Factors
 st.header("🚬 Behavioral Factors Analysis")
-col1, col2 = st.columns(3)
+col1, col2, col3 = st.columns(3)
 with col1:
     st.plotly_chart(plot_faf_stacked(), use_container_width=True)
 with col2:

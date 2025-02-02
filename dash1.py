@@ -135,35 +135,49 @@ def create_sunburst_chart():
     return fig
 
 def create_grouped_bar():
-    """Grouped bar chart for smoking and alcohol impact"""
+    """Grouped bar chart for smoking and alcohol impact (percentages)."""
+    
     # Convert SMOKE to numeric
     df['SMOKE'] = df['SMOKE'].map({'yes': 1, 'no': 0})
     
+    # Compute proportions
     smoke_alc_df = df.groupby('NObeyesdad').agg({
         'SMOKE': 'mean',
         'CALC': lambda x: (x == 'Frequently').mean()
     }).reset_index()
     
+    # Convert to percentage
+    smoke_alc_df[['SMOKE', 'CALC']] *= 100  
+    
     fig = go.Figure()
+    
     fig.add_trace(go.Bar(
         x=smoke_alc_df['NObeyesdad'],
         y=smoke_alc_df['SMOKE'],
         name='Smokers',
-        marker_color='#00f59b'
+        marker_color='#00f59b',
+        text=smoke_alc_df['SMOKE'].round(1).astype(str) + '%',  # Add percentage labels
+        textposition='outside'
     ))
+    
     fig.add_trace(go.Bar(
         x=smoke_alc_df['NObeyesdad'],
         y=smoke_alc_df['CALC'],
         name='Frequent Alcohol Consumers',
-        marker_color='#7014f2'
+        marker_color='#7014f2',
+        text=smoke_alc_df['CALC'].round(1).astype(str) + '%',  # Add percentage labels
+        textposition='outside'
     ))
+    
     fig.update_layout(
         title='Impact of Smoking & Alcohol Consumption',
         barmode='group',
         xaxis_title='Obesity Level',
-        yaxis_title='Proportion',
-        title_x=0.5
+        yaxis_title='Percentage (%)',  # Update y-axis label
+        title_x=0.5,
+        yaxis=dict(tickformat=".0f")  # Ensure whole number format on y-axis
     )
+    
     return fig
 
 def create_water_box():

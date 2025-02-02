@@ -236,7 +236,7 @@ with col2:
     st.plotly_chart(create_sunburst_chart(), use_container_width=True)
 
 # Row 5: Age-Weight Relationship
-st.header("⚖️ Age-Weight Relationship")
+st.header("⚖️ Height-Weight Relationship")
 st.plotly_chart(plot_height_weight_relationship(), use_container_width=True)
 
 

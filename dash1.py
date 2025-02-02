@@ -81,21 +81,33 @@ def plot_faf_stacked():
     # Define discrete color scale
     color_scale = px.colors.qualitative.Plotly  # Or use other qualitative color scales
     
-    # Create stacked bar plot
-    fig = px.bar(
-        faf_distribution, 
-        x='NObeyesdad', 
-        y='count', 
-        color='FAF_category', 
-        title='Physical Activity (FAF) Across Obesity Levels', 
-        labels={'count': 'Number of Cases', 'FAF_category': 'Physical Activity Frequency'},
-        barmode='stack',
-        color_discrete_sequence=color_scale
+    # Create an empty figure
+    fig = go.Figure()
+    
+    # Create one trace for each FAF_category
+    for i, category in enumerate(faf_distribution['FAF_category'].unique()):
+        category_data = faf_distribution[faf_distribution['FAF_category'] == category]
+        
+        fig.add_trace(go.Bar(
+            x=category_data['NObeyesdad'], 
+            y=category_data['count'], 
+            name=category,
+            text=category_data['count'],  # Add the text for annotations
+            textposition='inside',  # Place text inside the bars
+            marker_color=color_scale[i % len(color_scale)]  # Set color from the color scale
+        ))
+    
+    # Update layout
+    fig.update_layout(
+        title='Physical Activity (FAF) Across Obesity Levels',
+        barmode='stack',  # Stack the bars
+        xaxis_title='Obesity Level',
+        yaxis_title='Number of Cases',
+        title_x=0.5,
+        showlegend=True,  # Show legend for the different FAF categories
     )
     
-    fig.update_layout(title_x=0.5)
     return fig
-
 
 
 

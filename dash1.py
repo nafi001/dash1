@@ -24,22 +24,90 @@ df = load_data()
 # Dashboard Title and Description
 # ============================================
 st.title("📊 Obesity Risk Factors Analysis Dashboard")
-st.markdown("""
-**Objective:** Explore key factors influencing obesity levels (NObeyesdad) through comprehensive visual analysis.
-""")
+st.markdown("**Objective:** Explore key factors influencing obesity levels (NObeyesdad) through visual analysis.")
 
 # ============================================
-# Helper Functions for Visualizations
+# Updated Target Distribution
 # ============================================
 def plot_target_distribution():
-    """Distribution of target variable (NObeyesdad)"""
-    fig = px.bar(df['NObeyesdad'].value_counts().reset_index(), 
-                 x='NObeyesdad', y='count', 
-                 color='count',
-                 title='Distribution of Obesity Levels',
-                 labels={'count': 'Number of Cases', 'NObeyesdad': 'Obesity Category'})
+    """Sorted bar chart for obesity level distribution with distinct colors."""
+    category_counts = df['NObeyesdad'].value_counts().sort_index()
+    fig = px.bar(category_counts, 
+                 x=category_counts.index, 
+                 y=category_counts.values, 
+                 title="Distribution of Obesity Levels",
+                 labels={'x': 'Obesity Category', 'y': 'Number of Cases'},
+                 color=category_counts.index,
+                 color_discrete_sequence=px.colors.qualitative.Set2)
     fig.update_layout(title_x=0.5)
     return fig
+
+# ============================================
+# New Stacked Bar Chart (FAF vs Obesity)
+# ============================================
+def plot_faf_stacked():
+    """Stacked bar chart of obesity levels stacked by physical activity (FAF)."""
+    faf_distribution = df.groupby(['NObeyesdad', 'FAF']).size().reset_index(name='count')
+    fig = px.bar(faf_distribution, 
+                 x='NObeyesdad', y='count', color='FAF', 
+                 title='Physical Activity (FAF) Across Obesity Levels', 
+                 labels={'count': 'Number of Cases', 'FAF': 'Physical Activity Frequency'},
+                 barmode='stack')
+    fig.update_layout(title_x=0.5)
+    return fig
+
+# ============================================
+# Convert Categorical & Numerical Feature Plots to Plotly
+# ============================================
+def plot_categorical_features():
+    """Plot categorical feature distributions."""
+    categorical_features = df.select_dtypes(exclude="number").columns
+    figs = []
+    for feature in categorical_features:
+        fig = px.bar(df[feature].value_counts().reset_index(),
+                     x='index', y=feature, title=f'{feature} Distribution',
+                     labels={'index': feature, feature: 'Count'},
+                     color='index')
+        fig.update_layout(title_x=0.5)
+        figs.append(fig)
+    return figs
+
+def plot_numerical_features():
+    """Plot numerical feature distributions (histogram + boxplot)."""
+    numerical_features = df.select_dtypes(include="number").columns
+    figs = []
+    for feature in numerical_features:
+        fig = make_subplots(rows=1, cols=2, subplot_titles=(f'{feature} Histogram', f'{feature} Boxplot'))
+        fig.add_trace(go.Histogram(x=df[feature], name='Histogram', marker_color='blue'), row=1, col=1)
+        fig.add_trace(go.Box(y=df[feature], name='Boxplot', marker_color='red'), row=1, col=2)
+        fig.update_layout(title_text=f'{feature} Distribution', title_x=0.5)
+        figs.append(fig)
+    return figs
+
+def plot_categorical_features_target():
+    """Stacked bar charts for categorical features vs obesity level."""
+    categorical_features = df.select_dtypes(exclude="number").columns
+    figs = []
+    for feature in categorical_features:
+        grouped = df.groupby([feature, 'NObeyesdad']).size().reset_index(name='count')
+        fig = px.bar(grouped, x='NObeyesdad', y='count', color=feature, 
+                     title=f'{feature} vs Obesity Level',
+                     barmode='stack')
+        fig.update_layout(title_x=0.5)
+        figs.append(fig)
+    return figs
+
+def plot_numerical_features_target():
+    """Density plots of numerical features by obesity level."""
+    numerical_features = df.select_dtypes(include="number").columns
+    figs = []
+    for feature in numerical_features:
+        fig = px.violin(df, y=feature, x='NObeyesdad', color='NObeyesdad',
+                        title=f'{feature} Distribution by Obesity Level',
+                        box=True, points="all")
+        fig.update_layout(title_x=0.5)
+        figs.append(fig)
+    return figs
 
 def plot_age_weight_relationship():
     """Relationship between Age, Weight, and Obesity Level"""
@@ -51,37 +119,6 @@ def plot_age_weight_relationship():
     fig.update_layout(title_x=0.5)
     return fig
 
-def plot_feature_distributions():
-    """Feature distributions split by obesity level"""
-    fig = make_subplots(rows=2, cols=2,
-                       subplot_titles=('Height Distribution', 'Weight Distribution',
-                                      'Physical Activity Frequency', 'Water Consumption'))
-    
-    # Height Distribution
-    fig.add_trace(go.Box(x=df['NObeyesdad'], y=df['Height'], 
-                        name='Height', marker_color='#1f77b4'),
-                 row=1, col=1)
-    
-    # Weight Distribution
-    fig.add_trace(go.Box(x=df['NObeyesdad'], y=df['Weight'], 
-                        name='Weight', marker_color='#ff7f0e'),
-                 row=1, col=2)
-    
-    # Physical Activity
-    fig.add_trace(go.Violin(x=df['NObeyesdad'], y=df['FAF'],
-                           name='Physical Activity', box_visible=True,
-                           marker_color='#2ca02c'),
-                 row=2, col=1)
-    
-    # Water Consumption
-    fig.add_trace(go.Violin(x=df['NObeyesdad'], y=df['CH2O'],
-                           name='Water Consumption', box_visible=True,
-                           marker_color='#d62728'),
-                 row=2, col=2)
-    
-    fig.update_layout(height=800, title_text="Feature Distributions by Obesity Level", 
-                     title_x=0.5, showlegend=False)
-    return fig
 
 def create_funnel_chart():
     """Funnel chart of obesity divided by gender"""
@@ -160,10 +197,18 @@ with col4:
 st.header("🎯 Target Variable Analysis")
 st.plotly_chart(plot_target_distribution(), use_container_width=True)
 
-# Row 3: Feature Distributions
-st.header("📈 Feature Distributions by Obesity Level")
-st.plotly_chart(plot_feature_distributions(), use_container_width=True)
+# Row 3: Behavioral Factors
+st.header("🚬 Behavioral Factors Analysis")
+col1, col2 = st.columns(3)
+with col1:
+    st.plotly_chart(plot_faf_stacked(), use_container_width=True)
+with col2:
+    st.plotly_chart(create_grouped_bar(), use_container_width=True)
 
+with col3:
+    st.plotly_chart(create_water_box(), use_container_width=True)    
+    
+        
 # Row 4: Demographic Relationships
 st.header("👥 Demographic Relationships")
 col1, col2 = st.columns(2)
@@ -172,32 +217,27 @@ with col1:
 with col2:
     st.plotly_chart(create_sunburst_chart(), use_container_width=True)
 
-# Row 5: Behavioral Factors
-st.header("🚬 Behavioral Factors Analysis")
-col1, col2 = st.columns(2)
-with col1:
-    st.plotly_chart(create_grouped_bar(), use_container_width=True)
-with col2:
-    st.plotly_chart(create_water_box(), use_container_width=True)
-
-# Row 6: Age-Weight Relationship
+# Row 5: Age-Weight Relationship
 st.header("⚖️ Age-Weight Relationship")
 st.plotly_chart(plot_age_weight_relationship(), use_container_width=True)
 
 # ============================================
-# Insights Section
+# Categorical & Numerical Feature Plots
 # ============================================
-st.header("💡 Key Insights")
-with st.expander("Show Analysis Insights"):
-    st.markdown("""
-    1. **Obesity Distribution:** Clear categorization of obesity levels with varying prevalence
-    2. **Demographic Patterns:** Gender and family history show strong correlation with obesity levels
-    3. **Behavioral Factors:** Smoking and alcohol consumption patterns vary across obesity categories
-    4. **Physical Metrics:** Weight distribution shows significant variation between obesity classes
-    5. **Water Consumption:** Notable differences in hydration habits across different weight categories
-    6. **Age-Weight Correlation:** Visible trend of increasing weight with age in most categories
-    """)
+st.header("📊 Categorical Feature Analysis")
+for fig in plot_categorical_features():
+    st.plotly_chart(fig, use_container_width=True)
 
-# ============================================
-# Run with: streamlit run obesity_dashboard.py
-# ============================================
+st.header("📊 Numerical Feature Analysis")
+for fig in plot_numerical_features():
+    st.plotly_chart(fig, use_container_width=True)
+
+st.header("📊 Categorical Features vs Obesity Level")
+for fig in plot_categorical_features_target():
+    st.plotly_chart(fig, use_container_width=True)
+
+st.header("📊 Numerical Features vs Obesity Level")
+for fig in plot_numerical_features_target():
+    st.plotly_chart(fig, use_container_width=True)
+
+

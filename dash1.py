@@ -58,19 +58,21 @@ def plot_target_distribution():
 # ============================================
 # New Stacked Bar Chart (FAF vs Obesity)
 # ============================================
-def plot_faf_stacked(df):
+# Define categorical mapping for FAF
+FAF_MAPPING = {
+    0: 'I do not have',
+    1: '1 or 2 days',
+    2: '2 or 4 days',
+    3: '4 or 5 days'
+}
+
+def plot_faf_stacked():
     """Stacked bar chart of obesity levels stacked by physical activity (FAF) with categorized labels."""
     
-    # Define categorical mapping for FAF
-    faf_mapping = {
-        0: 'I do not have',
-        1: '1 or 2 days',
-        2: '2 or 4 days',
-        3: '4 or 5 days'
-    }
+    global df  # Ensure df is accessible inside the function
     
     # Map FAF to categorical labels
-    df['FAF_category'] = df['FAF'].map(faf_mapping)
+    df['FAF_category'] = df['FAF'].map(FAF_MAPPING)
     
     # Group data
     faf_distribution = df.groupby(['NObeyesdad', 'FAF_category']).size().reset_index(name='count')
@@ -92,6 +94,7 @@ def plot_faf_stacked(df):
     
     fig.update_layout(title_x=0.5)
     return fig
+
 
 
 

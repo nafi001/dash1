@@ -64,13 +64,18 @@ def plot_categorical_features():
     categorical_features = df.select_dtypes(exclude="number").columns
     figs = []
     for feature in categorical_features:
-        fig = px.bar(df[feature].value_counts().reset_index(),
-                     x='index', y=feature, title=f'{feature} Distribution',
-                     labels={'index': feature, feature: 'Count'},
-                     color='index')
+        # Correcting how the value counts are handled
+        value_counts = df[feature].value_counts().reset_index()
+        value_counts.columns = [feature, 'count']  # Rename columns
+        fig = px.bar(value_counts, 
+                     x=feature, y='count', 
+                     title=f'{feature} Distribution',
+                     labels={feature: 'Category', 'count': 'Count'},
+                     color=feature)
         fig.update_layout(title_x=0.5)
         figs.append(fig)
     return figs
+
 
 def plot_numerical_features():
     """Plot numerical feature distributions (histogram + boxplot)."""

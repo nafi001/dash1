@@ -91,16 +91,19 @@ def plot_numerical_features():
 
 import plotly.express as px
 
-def plot_categorical_features_target():
-    """Plot categorical features vs target using interactive stacked bar charts."""
-    categorical_features = df.select_dtypes(exclude="number").columns.drop('NObeyesdad', errors='ignore')
-    fig = make_subplots(rows=1, cols=len(categorical_features),
-                        subplot_titles=[f"{feat} vs Obesity" for feat in categorical_features],
+def plot_categorical_features_target(df, target_column='NObeyesdad', num_cols=2):
+    """Plot categorical features vs target using stacked bar charts in a grid layout."""
+    categorical_features = df.select_dtypes(exclude="number").columns.drop(target_column, errors='ignore')
+    num_rows = len(categorical_features) // num_cols + (len(categorical_features) % num_cols > 0)
+    
+    fig = make_subplots(rows=num_rows, cols=num_cols,
+                        subplot_titles=[f"{feat} vs {target_column}" for feat in categorical_features],
                         shared_yaxes=True)
     
     for i, feature in enumerate(categorical_features):
-        grouped = df.groupby(['NObeyesdad', feature]).size().reset_index(name='count')
-        pivot_df = grouped.pivot(index='NObeyesdad', columns=feature, values='count').fillna(0)
+        row, col = divmod(i, num_cols)
+        grouped = df.groupby([target_column, feature]).size().reset_index(name='count')
+        pivot_df = grouped.pivot(index=target_column, columns=feature, values='count').fillna(0)
         
         for j, category in enumerate(pivot_df.columns):
             fig.add_trace(
@@ -111,17 +114,17 @@ def plot_categorical_features_target():
                     marker_color=px.colors.qualitative.Pastel[j % len(px.colors.qualitative.Pastel)],
                     showlegend=(i == 0)  # Show legend only for first subplot
                 ),
-                row=1,
-                col=i + 1
+                row=row + 1,
+                col=col + 1
             )
         
-        fig.update_xaxes(title_text='Obesity Level', row=1, col=i + 1)
-        fig.update_yaxes(title_text="Count", row=1, col=i + 1)
+        fig.update_xaxes(title_text=target_column, row=row + 1, col=col + 1)
+        fig.update_yaxes(title_text="Count", row=row + 1, col=col + 1)
     
     fig.update_layout(
-        height=500,
+        height=250 * num_rows,
         barmode='stack',
-        title_text="Categorical Features vs Obesity Level",
+        title_text=f"Categorical Features vs {target_column}",
         margin=dict(t=100),
         legend_title_text="Categories"
     )

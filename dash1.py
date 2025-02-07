@@ -203,7 +203,7 @@ def create_water_box():
 # Dashboard Layout
 # ============================================
 
-st.header('🔍 Customer Churn Insights: Understanding Key Drivers of Attrition')
+
 # Row 1: Key Metrics
 st.header("🔑 Key Metrics Overview")
 col1, col2, col3, col4 = st.columns(4)
